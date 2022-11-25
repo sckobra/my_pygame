@@ -1,0 +1,184 @@
+
+from tkinter import N
+import pygame
+from sys import exit
+import random
+
+
+# required by pygame to initalize all modules
+pygame.init()
+
+screen = pygame.display.set_mode((536, 321))
+pygame.display.set_caption('My Game')
+
+font = pygame.font.SysFont("monospace", 40)
+
+score = 0
+text = font.render(str(score), True, 'black')
+
+
+textRect = text.get_rect()
+textRect.center = (536 // 2, 321 // 2)
+clock = pygame.time.Clock()
+
+sky_surface = pygame.image.load('sky.jpg').convert()
+ground_surface = pygame.Surface((536, 100))
+
+
+ground_surface.fill("brown")
+
+all_missiles = pygame.sprite.Group() # pygame sprite module, group class (groups together sprite objects)
+
+all_apples = pygame.sprite.Group()
+
+#classes
+class Missile(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.image.load('icon.png').convert()
+        self.rect = self.image.get_rect()
+        self.rect.x = random.randint(100, 500)
+        #print(self.rect.x)
+        self.rect.y = 0
+        # missile fall speed
+        self.speed = random.randint(1, 5)
+        #print(self.speed)
+    
+
+    def attach(self):
+        screen.blit(self.image, (self.rect.x, self.rect.y))
+
+    def update(self):
+        self.rect.y = self.rect.y + self.speed
+        if (self.rect.y >= 321):
+            self.rect.y = 0
+            self.rect.x = random.randint(100, 500)
+            self.speed = random.randint(1, 5)
+
+class Apple(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self) 
+        self.image = pygame.Surface((15, 15))
+        self.image.fill("red")
+        self.rect = self.image.get_rect()
+        self.rect.x = 0
+        self.rect.y = 0
+        self.speed = random.randint(1,3)
+       
+    def attach(self):
+        screen.blit(self.image, (self.rect.x, self.rect.y))
+
+    def update(self):
+        self.rect.y = self.rect.y + self.speed
+        if (self.rect.y >= 321):
+            self.rect.y = 0
+            self.rect.x = random.randint(100, 500)
+
+    def hide(self):
+        self.image = 0
+
+class Player(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface((25, 25))
+        self.rect = self.image.get_rect()
+        self.rect.x = 5
+        self.rect.y = 245
+        self.score = 0
+
+    def attach(self):
+        screen.blit(self.image, (self.rect.x, self.rect.y))
+
+    def update(self):
+        keys = pygame.key.get_pressed()
+
+        if keys[pygame.K_RIGHT]:
+            self.rect.x += 4
+            if (self.rect.x >= 536):
+                print("end")
+                self.rect.x = 5
+        if keys[pygame.K_LEFT]:
+            self.rect.x -= 4
+            if (self.rect.x <=0):
+                print("end")
+                self.rect.x = 531
+
+def updateScore():
+    global score
+    is_touching_missile = player.rect.collidelist(missile_names)
+    is_touching_apple = player.rect.collidelist(apple_names)
+    # collidelist method returns the index of the rect that collided, -1 if none
+    print(score)
+    
+    if (is_touching_missile != -1):
+        score -= 1
+        print(missile_names[is_touching_missile].image)
+        missile_names[is_touching_missile].image.fill("black")
+
+        print(score)
+    if (is_touching_apple != -1):
+        score += 1
+        
+  
+       
+        print(score)
+        
+
+
+
+num_missiles = random.randint(5, 7)
+
+missile_names = [] # holds all missile object instance
+
+apple_names = []
+#creating missile and apple objects
+for i in range (num_missiles):
+    new_instance_missile = Missile()
+    missile_names.append(new_instance_missile)
+    all_missiles.add(new_instance_missile) 
+ 
+    new_instance_apple = Apple()
+    apple_names.append(new_instance_apple)
+    all_apples.add(new_instance_apple)
+    
+
+player = Player()
+
+
+while True:
+    
+    for event in pygame.event.get():
+        #print(event)
+        if event.type == pygame.QUIT:
+            pygame.quit() #opposite of initalization so anything after will not run, need exit()
+            exit() #from sys module
+
+  
+
+    screen.blit(sky_surface, (0,0))
+    screen.blit(ground_surface, (0,270))
+
+
+    text = font.render(str(score), True, 'black')
+    screen.blit(text, (0, 0))
+    
+    player.attach()
+
+    # blits each missile sprite to screen
+    for i in range (len(missile_names)):
+        missile_names[i].attach()
+        apple_names[i].attach()
+    
+    
+
+    player.update()
+    pygame.display.update()
+    # updates each missile sprite through missile sprite group
+    all_missiles.update()
+    all_apples.update()
+    updateScore()
+   
+
+    clock.tick(60) #should not run faster than 60 frames per second
+
+    
